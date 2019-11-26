@@ -1,0 +1,21 @@
+{
+  "extends": [
+    "airbnb-base"
+    // "plugin:unicorn/recommended"
+  ],
+  "plugins": ["promise"],
+  "rules": {
+    "no-param-reassign": 0,
+    "semi": [2, "never"],
+    "no-underscore-dangle": 0,
+    "no-async-promise-executor": 0
+  },
+  "env": {
+    "node": true
+  },
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "ecmaVersion": 8,
+    "sourceType": "module"
+  }
+}

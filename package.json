@@ -1,0 +1,62 @@
+{
+  "name": "celo-contracts-js-signing",
+  "version": "1.0.0",
+  "description": "Signing customized transactions for Celo contracts on Ethereum",
+  "main": "index.js",
+  "repository": "git@bitbucket.org:cryptopipol/celo-contracts-js-signing.git",
+  "author": "Matías Barrios",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "ganache-cli -i 0x7 && truffle deploy",
+    "start": "nodemon --watch .env --watch src --exec babel-node src --source-maps",
+    "lint": "eslint src/**/*.js --fix && echo Lint passed ❤",
+    "clean": "rimraf dist && mkdir dist",
+    "prebuild": "npm run clean && cp package.json yarn.lock dist",
+    "build": "npm run prebuild && cross-env NODE_ENV=production babel src -D --out-dir dist --source-maps"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.4.5",
+    "@hapi/joi": "^16.1.7",
+    "@openzeppelin/contracts": "^2.4.0",
+    "app-root-path": "^3.0.0",
+    "dotenv": "^8.2.0",
+    "ganache-cli": "^6.7.0",
+    "pino": "^5.13.6",
+    "pino-pretty": "^3.4.0",
+    "truffle": "^5.1.1",
+    "web3": "^1.2.4"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.6.0",
+    "@babel/node": "^7.4.5",
+    "@babel/plugin-transform-runtime": "^7.4.4",
+    "@babel/preset-env": "^7.4.5",
+    "@commitlint/cli": "^8.0.0",
+    "@commitlint/config-conventional": "^8.0.0",
+    "babel-eslint": "^10.0.3",
+    "babel-plugin-add-module-exports": "^1.0.2",
+    "babel-preset-minify": "^0.5.1",
+    "cross-env": "^5.2.1",
+    "eslint": "^6.3.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.17.3",
+    "eslint-plugin-promise": "^4.1.1",
+    "eslint-plugin-unicorn": "^10.0.0",
+    "husky": "^3.0.5",
+    "lint-staged": "^9.2.5",
+    "nodemon": "^1.19.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "npm run lint"
+    ]
+  }
+}
