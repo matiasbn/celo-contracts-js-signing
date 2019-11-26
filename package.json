@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.4.5",
+    "@celo/contractkit": "^0.2.2",
     "@hapi/joi": "^16.1.7",
     "@openzeppelin/contracts": "^2.4.0",
     "app-root-path": "^3.0.0",
