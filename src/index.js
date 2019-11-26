@@ -1,117 +1,50 @@
-import Web3 from 'web3'
+import { newKit } from '@celo/contractkit'
+import './config/env'
 import fs from 'fs'
 import path from 'path'
 import Logger from './config/logger'
-import printBalances from './helpers/print-balances'
-import printNonces from './helpers/print-nonces'
-import './config/env'
 
-const { abi, networks } = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../build/contracts/SimpleContract.json')))
 const {
-  PRIVATE_KEY_1: pk1,
-  PRIVATE_KEY_2: pk2,
-} = process.env
-
-// Initialize web3
-const web3 = new Web3('http://localhost:8545')
-
-// Get SimpleContract address from Artifact
-const contractAddress = networks['7'].address
-Logger.info(`contractAddress: ${contractAddress}`)
-// Get contract Web3 object
-const simpleContract = new web3.eth.Contract(abi, contractAddress)
-
-// Private key to account
-const account0 = web3.eth.accounts.privateKeyToAccount(pk1)
-const account1 = web3.eth.accounts.privateKeyToAccount(pk2)
-
-// Create empty accounts
-const account2 = web3.eth.accounts.create()
-const account3 = web3.eth.accounts.create()
-
-// Get addresses
-const addresses = [account0.address, account1.address, account2.address, account3.address];
+  NODE_ENV,
+  ALFAJORES_URL,
+  LOCAL_URL,
+} = process.env;
 
 (async () => {
   try {
-    // Print balances and nonces
-    Logger.info('Initial state')
-    printBalances(web3, addresses)
-    printNonces(web3, addresses)
-    // Get 10 ether to wei
-    const ether = web3.utils.toWei('0.001')
-    // Get transaction object to send ether from account 0 to account 2
-    const sendEtherTransaction = {
-      from: addresses[0],
-      to: addresses[2],
-      value: web3.utils.toHex(ether),
-      gas: 200000,
-      chainId: 7,
-    }
-    // Sign transaction
-    let signedTx = await account0.signTransaction(sendEtherTransaction)
-    // Send signed transaction
-    await web3.eth.sendSignedTransaction(signedTx.rawTransaction)
+    const noChecksumAddress1 = 'e0395f45e534848e626b691c3db33b884e2837fa'
+    const noChecksumAddress2 = '6a0ebff8c9154ab69631b86234374ae952a66032'
+    const wallet1 = JSON.parse(fs.readFileSync(path.resolve(__dirname, `../keystore/${noChecksumAddress1}`)))
+    const wallet2 = JSON.parse(fs.readFileSync(path.resolve(__dirname, `../keystore/${noChecksumAddress2}`)))
+    const kit = newKit(NODE_ENV === 'production' ? ALFAJORES_URL : LOCAL_URL)
+    const { web3 } = kit
+    const accounts = web3.eth.accounts.wallet.decrypt([wallet1, wallet2], 'celopipol')
+    const address1 = web3.utils.toChecksumAddress(noChecksumAddress1)
+    const address2 = web3.utils.toChecksumAddress(noChecksumAddress2)
+    kit.addAccount(accounts['0'].privateKey)
+    kit.addAccount(accounts['1'].privateKey)
+    // const { address } = accounts['0']
+    // kit.defaultAccount = address
+    // cGLD
+    const goldtoken = await kit.contracts.getGoldToken()
+    const goldBalance = await goldtoken.balanceOf(address1)
 
-    Logger.info(`After sending ${web3.utils.fromWei(ether)} Eth`)
-    printBalances(web3, addresses)
-    printNonces(web3, addresses)
-    // Execute functions
-    // Set public value from address 0 (contractOwner)
-    let newPublicValue = 307
-    let estimatedGas = await simpleContract.methods.setPublicValue(newPublicValue).estimateGas()
-    let data = simpleContract.methods.setPublicValue(newPublicValue).encodeABI()
-    let setPublicValueTx = {
-      from: addresses[0],
-      to: contractAddress,
-      gasLimit: estimatedGas,
-      data,
-      chainId: 7,
-    }
-    signedTx = await account0.signTransaction(setPublicValueTx)
-    await web3.eth.sendSignedTransaction(signedTx.rawTransaction)
+    // cUSD
+    const stabletoken = await kit.contracts.getStableToken()
+    const usdBalance = await stabletoken.balanceOf(address1)
 
-    // Set public value from address 1
-    newPublicValue = 310
-    estimatedGas = await simpleContract.methods.setPublicValue(newPublicValue).estimateGas()
-    data = simpleContract.methods.setPublicValue(newPublicValue).encodeABI()
-    setPublicValueTx = {
-      from: addresses[1],
-      to: contractAddress,
-      gasLimit: estimatedGas,
-      data,
-      chainId: 7,
-    }
-    signedTx = await account1.signTransaction(setPublicValueTx)
-    await web3.eth.sendSignedTransaction(signedTx.rawTransaction)
+    Logger.info(web3.utils.fromWei(goldBalance.toString(10)))
+    Logger.info(web3.utils.fromWei(usdBalance.toString(10)))
 
-    // Set private value from address 0
-    let newPrivateValue = 3188
-    estimatedGas = await simpleContract.methods.setPrivateValue(newPrivateValue).estimateGas()
-    data = simpleContract.methods.setPrivateValue(newPrivateValue).encodeABI()
-    let setPrivateValueTx = {
-      from: addresses[0],
-      to: contractAddress,
-      gasLimit: estimatedGas,
-      data,
-      chainId: 7,
-    }
-    signedTx = await account0.signTransaction(setPrivateValueTx)
-    await web3.eth.sendSignedTransaction(signedTx.rawTransaction)
-
-    // Set private value from address 1 (it will revert because of Ownable contract)
-    newPrivateValue = 3189
-    estimatedGas = await simpleContract.methods.setPrivateValue(newPrivateValue).estimateGas()
-    data = simpleContract.methods.setPrivateValue(newPrivateValue).encodeABI()
-    setPrivateValueTx = {
-      from: addresses[1],
-      to: contractAddress,
-      gasLimit: estimatedGas,
-      data,
-      chainId: 7,
-    }
-    signedTx = await account1.signTransaction(setPrivateValueTx)
-    await web3.eth.sendSignedTransaction(signedTx.rawTransaction)
+    // Contracts
+    const oneGold = kit.web3.utils.toWei('1', 'ether')
+    const tx = await goldtoken.transfer(address2, oneGold).send({
+      from: address1,
+    })
+    const hash = await tx.getHash()
+    const receipt = await tx.waitReceipt()
+    Logger.info(hash)
+    Logger.info(receipt)
   } catch (error) {
     Logger.error(error)
   }
