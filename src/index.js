@@ -1,30 +1,25 @@
-import { newKit } from '@celo/contractkit'
 import './config/env'
+import { newKit } from '@celo/contractkit'
 import fs from 'fs'
 import path from 'path'
 import Logger from './config/logger'
 
-const {
-  NODE_ENV,
-  ALFAJORES_URL,
-  LOCAL_URL,
-} = process.env;
+const noChecksumAddress1 = 'e0395f45e534848e626b691c3db33b884e2837fa'
+const noChecksumAddress2 = '6a0ebff8c9154ab69631b86234374ae952a66032'
+const wallet1 = JSON.parse(fs.readFileSync(path.resolve(__dirname, `../keystore/${noChecksumAddress1}`)))
+const wallet2 = JSON.parse(fs.readFileSync(path.resolve(__dirname, `../keystore/${noChecksumAddress2}`)));
 
 (async () => {
   try {
-    const noChecksumAddress1 = 'e0395f45e534848e626b691c3db33b884e2837fa'
-    const noChecksumAddress2 = '6a0ebff8c9154ab69631b86234374ae952a66032'
-    const wallet1 = JSON.parse(fs.readFileSync(path.resolve(__dirname, `../keystore/${noChecksumAddress1}`)))
-    const wallet2 = JSON.parse(fs.readFileSync(path.resolve(__dirname, `../keystore/${noChecksumAddress2}`)))
-    const kit = newKit(NODE_ENV === 'production' ? ALFAJORES_URL : LOCAL_URL)
+    const alfajoresUrl = 'https://alfajores-infura.celo-testnet.org'
+    const kit = newKit(alfajoresUrl)
     const { web3 } = kit
     const accounts = web3.eth.accounts.wallet.decrypt([wallet1, wallet2], 'celopipol')
     const address1 = web3.utils.toChecksumAddress(noChecksumAddress1)
     const address2 = web3.utils.toChecksumAddress(noChecksumAddress2)
     kit.addAccount(accounts['0'].privateKey)
     kit.addAccount(accounts['1'].privateKey)
-    // const { address } = accounts['0']
-    // kit.defaultAccount = address
+
     // cGLD
     const goldtoken = await kit.contracts.getGoldToken()
     const goldBalance = await goldtoken.balanceOf(address1)
