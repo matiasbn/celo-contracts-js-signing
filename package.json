@@ -20,7 +20,7 @@
     "@babel/runtime": "^7.4.5",
     "@celo/contractkit": "^0.2.2",
     "@hapi/joi": "^16.1.7",
-    "@openzeppelin/contracts": "^2.4.0",
+    "@openzeppelin/contracts": "^4.7.2",
     "app-root-path": "^3.0.0",
     "dotenv": "^8.2.0",
     "ganache-cli": "^6.7.0",
